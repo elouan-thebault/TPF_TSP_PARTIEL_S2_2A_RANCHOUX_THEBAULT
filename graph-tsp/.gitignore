@@ -1,0 +1,11 @@
+# CMake build directory
+out/
+_out/
+build/
+
+.vs
+
+data/france_graph.txt
+data/france_inter.txt
+data/pays_de_la_loire_graph.txt
+data/pays_de_la_loire_inter.txt

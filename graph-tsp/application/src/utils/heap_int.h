@@ -1,9 +1,3 @@
-/*
-    Copyright (c) Arnaud BANNIER, Nicolas BODIN and Matthieu LE BERRE.
-    Licensed under the MIT License.
-    See LICENSE.md in the project root for license information.
-*/
-
 #pragma once
 
 #include "settings.h"
@@ -21,3 +15,7 @@ typedef struct HeapInt
     int capacity;
 } HeapInt;
 
+HeapInt* heapCreate();
+void heapDestroy(HeapInt* heap);
+void heapPush(HeapInt* heap, int value, float priority);
+int heapPop(HeapInt* heap);

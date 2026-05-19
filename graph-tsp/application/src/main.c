@@ -1,86 +1,53 @@
 #include "settings.h"
-#include "graph/graph.h"
+#include "graph/tsp.h"
 #include "graph/shortest_path.h"
-#include "utils/geo_json.h"
+#include "utils/list_int.h"
 
 int main()
-{
-    return tsp_heurr();
-}
-
-
-int tsp_heurr()
 {
     char chgraph[256], chcoord[256];
     int n;
 
     if (fscanf(stdin, "%255s %255s %d", chgraph, chcoord, &n) != 3) return EXIT_FAILURE;
 
-    CoordGraph* coord_graph = CoordGraph_load(&chcoord);
-
     int* points = malloc(n * sizeof(int));
-    int* ordre = malloc(n * sizeof(int));
-    bool* explored = calloc(n, sizeof(bool));
-    if (!points || !ordre || !explored) return EXIT_FAILURE;
+    if (!points) return EXIT_FAILURE;
 
-    for (int i = 0; i < n; i++) if (fscanf(stdin, "%d", &points[i]) != 1) return EXIT_FAILURE;
-
-    create_geojson(n, points, coord_graph);
+    for (int i = 0; i < n; i++)
+        if (fscanf(stdin, "%d", &points[i]) != 1) return EXIT_FAILURE;
 
     Graph* graph = Graph_load(chgraph);
     if (!graph) return EXIT_FAILURE;
 
-    float total_distance = 0;
-    int current_idx = 0;
-    explored[0] = true;
-    ordre[0] = 0;
-    int visited_count = 1;
-
-    while (visited_count < n)
+    Graph* reduced = Graph_create(n);
+    for (int i = 0; i < n; i++)
     {
-        int id_min = -1;
-        float dist_min = INFINITY;
-
-        for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
         {
-            if (explored[i]) continue;
-
-            Path* path = Graph_shortestPath(graph, points[current_idx], points[i]);
-            if (!path) return 1;
-
-            if (path->distance < dist_min)
-            {
-                dist_min = path->distance;
-                id_min = i;
-            }
-            Path_destroy(path);
+            if (i == j) continue;
+            Path* sp = Graph_shortestPath(graph, points[i], points[j]);
+            if (!sp) { Graph_destroy(reduced); Graph_destroy(graph); free(points); return 1; }
+            Graph_setArc(reduced, i, j, sp->distance);
+            Path_destroy(sp);
         }
-
-        if (id_min == -1) return 1;
-        Path* path = Graph_shortestPath(graph, points[current_idx], points[id_min]);
-        add_path_geojson(path, n, points, coord_graph);
-        total_distance += dist_min;
-        explored[id_min] = true;
-        current_idx = id_min;
-        ordre[visited_count] = current_idx;
-        visited_count++;
     }
 
-    Path* pstart = Graph_shortestPath(graph, points[current_idx], points[0]);
-    if (!pstart) return 1;
-    add_path_geojson(pstart, n, points, coord_graph);
-    total_distance += pstart->distance;
-    Path_destroy(pstart);
+    Path* path = Graph_tspFromACO(reduced, 0, 200, 60, 2.0f, 3.0f, 0.1f, 2.0f);
+    if (!path) { Graph_destroy(reduced); Graph_destroy(graph); free(points); return EXIT_FAILURE; }
 
-    printf("%.1f %i\n", total_distance, n + 1);
-    for (int i = 0; i < n; i++) printf("%d ", ordre[i]);
-    printf("%d\n", 0);
+    printf("%.1f %d\n", path->distance, n + 1);
+    ListIntNode* sentinel = &(path->list->sentinel);
+    ListIntNode* node = sentinel->next;
+    while (node != sentinel)
+    {
+        printf("%d ", node->value);
+        node = node->next;
+    }
+    printf("\n");
 
-    free(points);
-    free(ordre);
-    free(explored);
+    Path_destroy(path);
+    Graph_destroy(reduced);
     Graph_destroy(graph);
-    CoordGraph_destroy(coord_graph);
-
+    free(points);
     return EXIT_SUCCESS;
 }

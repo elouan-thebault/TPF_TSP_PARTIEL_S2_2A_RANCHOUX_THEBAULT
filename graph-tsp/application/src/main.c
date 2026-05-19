@@ -44,18 +44,36 @@ int tsp_ACO()
     if (!graph) return EXIT_FAILURE;
 
     Graph* reduced = Graph_create(n);
+    int* predecessors = malloc(Graph_getVertexCount(graph) * sizeof(int));
+    float* distances = malloc(Graph_getVertexCount(graph) * sizeof(float));
+    assert(predecessors && distances);
+
     for (int i = 0; i < n; i++)
     {
+        Graph_dijkstra(graph, points[i], -1, predecessors, distances);
+
         for (int j = 0; j < n; j++)
         {
             if (i == j) continue;
-            Path* sp = Graph_shortestPath(graph, points[i], points[j]);
-            if (!sp) { Graph_destroy(reduced); Graph_destroy(graph); free(points); return 1; }
-            Graph_setArc(reduced, i, j, sp->distance);
-            Path_destroy(sp);
-            printf("Reduced en cours i = %d/%d, j = %d/%d\n",i, n, j, n);
+
+            if (distances[points[j]] == FLT_MAX)
+            {
+                Graph_destroy(reduced);
+                Graph_destroy(graph);
+                free(predecessors);
+                free(distances);
+                free(points);
+                return 1;
+            }
+
+            Graph_setArc(reduced, i, j, distances[points[j]]);
         }
+
+        printf("Reduced en cours i = %d/%d\n", i, n);
     }
+
+    free(predecessors);
+    free(distances);
 
     Path *path = Graph_tspFromACO(reduced, station, iterationCount, antCount, alpha, beta, rho, q, bestCost);
 

@@ -107,7 +107,7 @@ int create_geojson(int n, int* points, CoordGraph* coord_graph)
 
     write_placeholder(f);
     fclose(f);
-    printf("✓ GeoJSON initialisé : %d points → %s\n", n, GEOJSON_PATH);
+    printf("GeoJSON initialisé : %d points %s\n", n, GEOJSON_PATH);
     return 0;
 }
 

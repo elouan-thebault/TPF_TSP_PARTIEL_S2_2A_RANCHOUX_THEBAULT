@@ -192,7 +192,7 @@ void Graph_acoPheromoneGlobalUpdate(Graph* pheromones, float rho)
 
 Path* Graph_tspFromACO(
     Graph* distances, int station, int iterationCount, int antCount,
-    float alpha, float beta, float rho, float q, float *bestCost)
+    float alpha, float beta, float rho, float q)
 {
     int n = Graph_getVertexCount(distances);
     printf("graph bien charger\n");
@@ -206,6 +206,7 @@ Path* Graph_tspFromACO(
             Graph_setArc(pheromones, i, arc->target, 1.0f);
         }
     }
+    float bestCost = INFINITY;
 
     printf("graph phéromone arc set\n");
 
@@ -220,11 +221,11 @@ Path* Graph_tspFromACO(
 
             Graph_acoPheromoneUpdatePath(pheromones, antPath, q);
 
-            if (antPath->distance < *bestCost)
+            if (antPath->distance < bestCost)
             {
                 if (bestPath) Path_destroy(bestPath);
                 bestPath = antPath;
-                *bestCost = antPath->distance;
+                bestCost = antPath->distance;
             }
             else
             {
@@ -237,7 +238,7 @@ Path* Graph_tspFromACO(
 
         Graph_acoPheromoneGlobalUpdate(pheromones, rho);
     }
-
+    bestPath->distance = bestCost;
     Graph_destroy(pheromones);
     return bestPath;
 }

@@ -28,7 +28,7 @@ Path* Graph_tspFromHeuristic(Graph* distances, int station);
 /// @return La tournée.
 Path* Graph_tspFromACO(
     Graph* distances, int station, int iterationCount, int antCount,
-    float alpha, float beta, float rho, float q, float* bestCost);
+    float alpha, float beta, float rho, float q);
 
 /// @brief Depuis un sommet, calcule les probabilités de passer aux sommets suivants.
 /// @param distances le graphe des distances. Il doit être complet.

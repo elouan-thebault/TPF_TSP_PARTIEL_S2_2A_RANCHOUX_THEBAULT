@@ -5,9 +5,113 @@
 #include "graph/tsp.h"
 #include "float.h"
 
+bool Arc_isInPath(Path* path, int u, int v)
+{
+    ListIntIter* iter = ListIntIter_create(path->list);
+    while (ListIntIter_isValid(iter))
+    {
+        int a = ListIntIter_get(iter);
+        ListIntIter_next(iter);
+        if (!ListIntIter_isValid(iter)) break;
+        int b = ListIntIter_get(iter);
+
+        if (a == u && b == v)
+        {
+            ListIntIter_destroy(iter);
+            return true;
+        }
+    }
+    ListIntIter_destroy(iter);
+    return false;
+}
+//../../../data/reduit_opti.txt
 int main()
 {
-    return tsp_ACO();
+    return tspAcoOpti();
+}
+int tspAcoOpti()
+{
+    char chgraph[256];
+    if (fscanf(stdin, "%255s", chgraph) != 1) return EXIT_FAILURE;
+
+    Graph* distances = Graph_load(chgraph);
+    int n = Graph_getVertexCount(distances);
+
+    int station = 0;
+    int iterationCount = 200;
+    int antCount = 60;
+    float alpha = 2.0f;
+    float beta = 3.0f;
+    float rho = 0.1f;
+    float q = 2.0f;
+    Path* papath;
+    float bestdist = INFINITY;
+
+    for (int i = 0; i < n; i++)
+    {
+        papath = Graph_tspFromHeuristic(distances, i);
+        if (papath->distance < bestdist)
+        {
+            bestdist = papath->distance;
+        }
+    }
+
+    printf("graph bien charger\n");
+    Graph* pheromones = Graph_create(n);
+    printf("graph phéromone chargé\n");
+
+    for (int i = 0; i < distances->vertexCount; i++)
+    {
+        for (ArcList* arc = Graph_getArcList(distances, i); arc; arc = arc->next)
+        {
+            float value = Arc_isInPath(papath, i, arc->target) ? 2.0f : 1.0f;
+            Graph_setArc(pheromones, i, arc->target, value);
+        }
+    }
+    float bestCost = INFINITY;
+
+    printf("graph phéromone arc set\n");
+
+    Path* bestPath = NULL;
+
+    for (int iter = 0; iter < iterationCount; iter++)
+    {
+        for (int ant = 0; ant < antCount; ant++)
+        {
+            Path* antPath = Graph_acoConstructPath(
+                distances, pheromones, station, alpha, beta);
+
+            Graph_acoPheromoneUpdatePath(pheromones, antPath, q);
+
+            if (antPath->distance < bestCost)
+            {
+                if (bestPath) Path_destroy(bestPath);
+                bestPath = antPath;
+                bestCost = antPath->distance;
+            }
+            else
+            {
+                Path_destroy(antPath);
+            }
+            printf("Itération Numéro ! %d, ant Numéro : %d\n", iter, ant);
+
+        }
+        printf("Itération Numéro ! %d\n", iter);
+
+        Graph_acoPheromoneGlobalUpdate(pheromones, rho);
+    }
+    bestPath->distance = bestCost;
+    Graph_destroy(pheromones);
+
+    printf("%.1f %d\n", bestPath->distance, distances->vertexCount+1);
+    ListIntIter* it = ListIntIter_create(bestPath->list);
+    while (ListIntIter_isValid(it))
+    {
+        int currID = ListIntIter_get(it);
+        ListIntIter_next(it);
+        printf("%d ", currID);
+    }
+    return bestPath;
 }
 
 int tsp_ACO()
@@ -25,7 +129,7 @@ int tsp_ACO()
 
     if (fscanf(stdin, "%255s %255s %d", chgraph, chcoord, &n) != 3) return EXIT_FAILURE;
 
-    CoordGraph* coord_graph = CoordGraph_load(&chcoord);
+    //CoordGraph* coord_graph = CoordGraph_load(&chcoord);
     printf("CoordGraph Load\n");
     int* points = malloc(n * sizeof(int));
     int* ordre = malloc(n * sizeof(int));
@@ -37,7 +141,7 @@ int tsp_ACO()
     if (!points || !ordre) return EXIT_FAILURE;
 
     for (int i = 0; i < n; i++) if (fscanf(stdin, "%d", &points[i]) != 1) return EXIT_FAILURE;
-    create_geojson(n, points, coord_graph);
+    //create_geojson(n, points, coord_graph);
 
     Graph* graph = Graph_load(chgraph);
     printf("Graph Load\n");
@@ -47,7 +151,7 @@ int tsp_ACO()
     int* predecessors = malloc(Graph_getVertexCount(graph) * sizeof(int));
     float* distances = malloc(Graph_getVertexCount(graph) * sizeof(float));
     assert(predecessors && distances);
-
+    printf("Commencement Reduction\n");
     for (int i = 0; i < n; i++)
     {
         Graph_dijkstra(graph, points[i], -1, predecessors, distances);
@@ -72,12 +176,13 @@ int tsp_ACO()
         printf("Reduced en cours i = %d/%d\n", i, n);
     }
 
+
     free(predecessors);
     free(distances);
 
-    Path *path = Graph_tspFromACO(reduced, station, iterationCount, antCount, alpha, beta, rho, q, bestCost);
-
-    printf("%.1f %i\n", *bestCost, n + 1);
+    Path *path = Graph_tspFromACO(reduced, station, iterationCount, antCount, alpha, beta, rho, q);
+    
+    printf("%.1f %i\n", path->distance, n + 1);
     ListIntNode* sentinel = &(path->list->sentinel);
     ListIntNode* node = sentinel->next;
     while (node != sentinel)
@@ -86,13 +191,12 @@ int tsp_ACO()
         node = node->next;
     }
     printf("\n");
-
     Path_destroy(path);
     free(points);
     free(ordre);
     free(bestCost);
     Graph_destroy(graph);
-    CoordGraph_destroy(coord_graph);
+    //CoordGraph_destroy(coord_graph);
 
     return EXIT_SUCCESS;
 }
@@ -171,3 +275,4 @@ int tsp_heurr()
 
     return EXIT_SUCCESS;
 }
+

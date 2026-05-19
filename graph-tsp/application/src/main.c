@@ -20,18 +20,34 @@ int main()
     if (!graph) return EXIT_FAILURE;
 
     Graph* reduced = Graph_create(n);
+    int* predecessors = malloc(Graph_getVertexCount(graph) * sizeof(int));
+    float* distances = malloc(Graph_getVertexCount(graph) * sizeof(float));
+    assert(predecessors && distances);
+
     for (int i = 0; i < n; i++)
     {
-        for (int j = 0; j < n; j++)
+        for (int i = 0; i < n; i++)
         {
-            if (i == j) continue;
-            Path* sp = Graph_shortestPath(graph, points[i], points[j]);
-            if (!sp) { Graph_destroy(reduced); Graph_destroy(graph); free(points); return 1; }
-            Graph_setArc(reduced, i, j, sp->distance);
-            Path_destroy(sp);
+            Graph_dijkstra(graph, points[i], -1, predecessors, distances);
+
+            for (int j = 0; j < n; j++)
+            {
+                if (i == j) continue;
+
+                if (distances[points[j]] == INFINITY)
+                {
+                    Graph_destroy(reduced);
+                    Graph_destroy(graph);
+                    free(predecessors);
+                    free(distances);
+                    free(points);
+                    return 1;
+                }
+
+                Graph_setArc(reduced, i, j, distances[points[j]]);
+            }
         }
     }
-
     Path* path = Graph_tspFromACO(reduced, 0, 200, 60, 2.0f, 3.0f, 0.1f, 2.0f);
     if (!path) { Graph_destroy(reduced); Graph_destroy(graph); free(points); return EXIT_FAILURE; }
 

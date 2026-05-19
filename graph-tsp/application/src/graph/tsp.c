@@ -149,55 +149,38 @@ Path* Graph_tspFromACO(
     Graph* distances, int station, int iterationCount, int antCount,
     float alpha, float beta, float rho, float q)
 {
-    Graph* pheromones = Graph_create(distances->vertexCount);
-    for (int i = 0; i < distances->vertexCount; i++)
+    int n = Graph_getVertexCount(distances);
+    Graph* pheromones = Graph_create(n);
+    for (int u = 0; u < n; u++)
     {
-        for (ArcList* arc = Graph_getArcList(distances, i); arc; arc = arc->next)
-        {
-            Graph_setArc(pheromones, i, arc->target, 1.0f);
-        }
+        for (ArcList* arc = Graph_getArcList(distances, u); arc; arc = arc->next)
+            Graph_setArc(pheromones, u, arc->target, 1.0f);
     }
 
-    Path* best_path = NULL;
-    Path** antpath = malloc(antCount * sizeof(Path*));
-    if (!antpath)
-    {
-        Graph_destroy(pheromones);
-        return NULL;
-    }
+    Path* bestPath = NULL;
 
-    for (int i = 0; i < iterationCount; i++)
+    for (int iter = 0; iter < iterationCount; iter++)
     {
-        for (int j = 0; j < antCount; j++)
-        {
-            antpath[j] = Graph_acoConstructPath(distances, pheromones, station, alpha, beta);
-            if (antpath[j])
-            {
-                if (!best_path || antpath[j]->distance < best_path->distance)
-                {
-                    if (best_path) Path_destroy(best_path);
-                    best_path = calloc(1, sizeof(Path));
-                    if (best_path)
-                    {
-                        best_path->distance = antpath[j]->distance;
-                        best_path->list = ListInt_copy(antpath[j]->list);
-                    }
-                }
-            }
-        }
-
         Graph_acoPheromoneGlobalUpdate(pheromones, rho);
-
-        for (int j = 0; j < antCount; j++)
+        for (int ant = 0; ant < antCount; ant++)
         {
-            if (antpath[j])
+            Path* antPath = Graph_acoConstructPath(distances, pheromones, station, alpha, beta);
+            if (!antPath) continue;
+
+            Graph_acoPheromoneUpdatePath(pheromones, antPath, q);
+
+            if (!bestPath || antPath->distance < bestPath->distance)
             {
-                Graph_acoPheromoneUpdatePath(pheromones, antpath[j], q);
-                Path_destroy(antpath[j]);
+                if (bestPath) Path_destroy(bestPath);
+                bestPath = antPath;
+            }
+            else
+            {
+                Path_destroy(antPath);
             }
         }
     }
-    free(antpath);
+
     Graph_destroy(pheromones);
-    return best_path;
+    return bestPath;
 }

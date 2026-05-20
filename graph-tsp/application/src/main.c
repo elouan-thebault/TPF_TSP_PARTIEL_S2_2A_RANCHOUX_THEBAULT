@@ -27,7 +27,7 @@ bool Arc_isInPath(Path* path, int u, int v)
 //../../../data/reduit_opti.txt
 int main()
 {
-    return tspAcoOpti();
+    return tsp_ACO();
 }
 int tspAcoOpti()
 {
@@ -93,13 +93,12 @@ int tspAcoOpti()
             {
                 Path_destroy(antPath);
             }
-            printf("Itération Numéro ! %d, ant Numéro : %d\n", iter, ant);
 
         }
-        printf("Itération Numéro ! %d\n", iter);
 
         Graph_acoPheromoneGlobalUpdate(pheromones, rho);
     }
+
     bestPath->distance = bestCost;
     Graph_destroy(pheromones);
 
@@ -129,7 +128,7 @@ int tsp_ACO()
 
     if (fscanf(stdin, "%255s %255s %d", chgraph, chcoord, &n) != 3) return EXIT_FAILURE;
 
-    //CoordGraph* coord_graph = CoordGraph_load(&chcoord);
+    CoordGraph* coord_graph = CoordGraph_load(&chcoord);
     printf("CoordGraph Load\n");
     int* points = malloc(n * sizeof(int));
     int* ordre = malloc(n * sizeof(int));
@@ -141,7 +140,7 @@ int tsp_ACO()
     if (!points || !ordre) return EXIT_FAILURE;
 
     for (int i = 0; i < n; i++) if (fscanf(stdin, "%d", &points[i]) != 1) return EXIT_FAILURE;
-    //create_geojson(n, points, coord_graph);
+    create_geojson(n, points, coord_graph);
 
     Graph* graph = Graph_load(chgraph);
     printf("Graph Load\n");
@@ -181,6 +180,8 @@ int tsp_ACO()
     free(distances);
 
     Path *path = Graph_tspFromACO(reduced, station, iterationCount, antCount, alpha, beta, rho, q);
+
+    add_path_geojson(path, n, points, coord_graph);
     
     printf("%.1f %i\n", path->distance, n + 1);
     ListIntNode* sentinel = &(path->list->sentinel);
@@ -196,7 +197,7 @@ int tsp_ACO()
     free(ordre);
     free(bestCost);
     Graph_destroy(graph);
-    //CoordGraph_destroy(coord_graph);
+    CoordGraph_destroy(coord_graph);
 
     return EXIT_SUCCESS;
 }

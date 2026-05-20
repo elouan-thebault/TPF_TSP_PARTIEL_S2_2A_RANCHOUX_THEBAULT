@@ -16,6 +16,8 @@ typedef struct
     int    count;
 } CoordGraph;
 
+
+
 CoordGraph* CoordGraph_load(const char* filepath);
 void        CoordGraph_destroy(CoordGraph* self);
 

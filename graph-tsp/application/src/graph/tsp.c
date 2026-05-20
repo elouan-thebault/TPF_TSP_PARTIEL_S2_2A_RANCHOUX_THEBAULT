@@ -20,7 +20,62 @@ double power(double base, int exp)
 
 Path* Graph_tspFromHeuristic(Graph* self, int station)
 {
-    return NULL;
+    assert(self && "self must not be NULL");
+    const int n = Graph_getVertexCount(self);
+    assert(station >= 0 && station < n);
+
+    Path* tsp_path = Path_create(station);
+    if (!tsp_path) return NULL;
+
+    bool* explored = (bool*)calloc(n, sizeof(bool));
+    AssertNew(explored);
+
+    int current = station;
+    explored[current] = true;
+    int visited_count = 1;
+
+    while (visited_count < n)
+    {
+        int next_vertex = -1;
+        float min_dist = INFINITY;
+
+        for (ArcList* arc = Graph_getArcList(self, current); arc != NULL; arc = arc->next)
+        {
+            if (!explored[arc->target] && arc->weight < min_dist)
+            {
+                min_dist = arc->weight;
+                next_vertex = arc->target;
+            }
+        }
+
+        if (next_vertex == -1)
+        {
+            free(explored);
+            Path_destroy(tsp_path);
+            return NULL;
+        }
+
+        ListInt_insertLast(tsp_path->list, next_vertex);
+        tsp_path->distance += min_dist;
+
+        explored[next_vertex] = true;
+        current = next_vertex;
+        visited_count++;
+    }
+
+    float* return_weight = Graph_getArc(self, current, station);
+    if (!return_weight)
+    {
+        free(explored);
+        Path_destroy(tsp_path);
+        return NULL;
+    }
+
+    ListInt_insertLast(tsp_path->list, station);
+    tsp_path->distance += *return_weight;
+
+    free(explored);
+    return tsp_path;
 }
 
 float* Graph_acoGetProbabilities(

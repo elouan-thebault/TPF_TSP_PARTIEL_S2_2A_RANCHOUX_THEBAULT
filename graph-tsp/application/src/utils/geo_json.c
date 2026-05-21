@@ -149,6 +149,10 @@ int add_path_geojson(Path* path, int n, int* points, CoordGraph* coord_graph)
         if (points[k] == to_node)   to_index = k;
     }
 
+    // ✅ CONDITION : Si pas trouvé, utiliser les indices par défaut
+    if (from_index == -1) from_index = 0;
+    if (to_index == -1) to_index = n - 1;
+
     fprintf(f,
         "    {\n"
         "      \"type\": \"Feature\",\n"

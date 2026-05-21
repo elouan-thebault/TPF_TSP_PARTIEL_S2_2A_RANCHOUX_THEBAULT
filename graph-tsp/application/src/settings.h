@@ -33,6 +33,9 @@
 #define TEST_PATH ROOT_PATH"/test"
 #define GEOJSON_PATH DATA_PATH "/result.geojson"
 #define TESTTEST_PATH TEST_PATH "/3_tsp_heuristic/input1.txt"
+#define COMMUNES_PATH DATA_PATH "/communes-departement-region.csv"
 
+
+#define LINE_SIZE 100
 #define EARTH_RADIUS_KM 6371.0
 #define DEG_TO_RAD(x) ((x) * M_PI / 180.0)

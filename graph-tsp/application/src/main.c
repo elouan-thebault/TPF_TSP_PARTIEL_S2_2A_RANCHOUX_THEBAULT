@@ -4,6 +4,7 @@
 #include "utils/geo_json.h"
 #include "graph/tsp.h"
 #include "float.h"
+#include "utils/search_trough.h"
 
 bool Arc_isInPath(Path* path, int u, int v)
 {
@@ -25,13 +26,89 @@ bool Arc_isInPath(Path* path, int u, int v)
     return false;
 }
 //../../../data/reduit_opti.txt
+//../../../data/france_graph.txt
+//../../../data/france_inter.txt
 int main()
 {
-    return tsp_ACO();
+
+    char chgraph[255], chcoord[255];
+
+    if (fscanf(stdin, "%255s %255s", chgraph, chcoord) != 2) return EXIT_FAILURE;
+
+    CoordGraph* coord_graph = CoordGraph_load(chcoord);
+
+    Graph* distances = Graph_load(chgraph);
+
+    Localisation* communes = NULL;
+    int nbCommunes = 0;
+
+    if (loadCommunes(&communes, &nbCommunes) != 0)
+    {
+        printf("Erreur lors du chargement\n");
+        return 1;
+    }
+
+    communes->size = nbCommunes;
+
+    printf("%d communes chargees\n", nbCommunes);
+
+    int start = 0, end = 0;
+    printf("Donnez a la suite séparer d'espace 2 codes communal de l'insee\n");
+
+    if (fscanf(stdin, "%d %d", &start, &end) != 2) {
+        return NULL;
+    }
+
+    end = indice_from_id(end, communes);
+    start = indice_from_id(start, communes);
+    
+
+    assert(start != -1 && "start invalide");
+    assert(end != -1 && "end invalide");
+
+    Path* path = Graph_shortestPath(distances, start, end);
+    float distance = path->distance;
+
+    int n = 2;
+    int* points = calloc(n, sizeof(int));
+
+    points[0] = point_le_plus_proche(coord_graph, communes[start].coordid->coords);
+    points[1] = point_le_plus_proche(coord_graph, communes[end].coordid->coords);
+
+    create_geojson(n, points, coord_graph);
+    add_path_geojson(path, n, points, coord_graph);
+
+    printf("Distance totale: %.2f km\n", distance);
+
+    free(points);
+    Graph_destroy(distances);
+    CoordGraph_destroy(coord_graph);
+
+
+   /* for (int i = 0; i < nbCommunes; i++)
+    {
+        communes[i].coordid->identifiant = point_le_plus_proche(coord_graph, communes[i].coordid->coords);
+        printf("La commune : %255s est relié a l'identifiant %d\n", communes[i].name, communes[i].coordid->identifiant);
+    }
+
+    for (int i = 0; i < nbCommunes; i++)
+    {
+        printf(
+            "%s (%d) (%d) : %.6f %.6f\n",
+            communes[i].name,
+            communes[i].coordid->identifiant,
+            communes[i].id,
+            communes[i].coordid->coords->lat,
+            communes[i].coordid->coords->lon
+        );
+    }*/
+    
+    //return tsp_ACO();
+    return EXIT_SUCCESS;
 }
-int tspAcoOpti()
+Path *tspAcoOpti()
 {
-    char chgraph[256];
+    char chgraph[255];
     if (fscanf(stdin, "%255s", chgraph) != 1) return EXIT_FAILURE;
 
     Graph* distances = Graph_load(chgraph);
@@ -123,7 +200,7 @@ int tsp_ACO()
     float rho = 0.1f;
     float q = 2.0f;
 
-    char chgraph[256], chcoord[256];
+    char chgraph[255], chcoord[255];
     int n;
 
     if (fscanf(stdin, "%255s %255s %d", chgraph, chcoord, &n) != 3) return EXIT_FAILURE;
@@ -203,7 +280,7 @@ int tsp_ACO()
 }
 int tsp_heurr()
 {
-    char chgraph[256], chcoord[256];
+    char chgraph[255], chcoord[255];
     int n;
 
     if (fscanf(stdin, "%255s %255s %d", chgraph, chcoord, &n) != 3) return EXIT_FAILURE;

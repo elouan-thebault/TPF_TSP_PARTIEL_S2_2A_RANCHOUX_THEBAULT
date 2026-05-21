@@ -2,22 +2,6 @@
 #include "graph/graph.h"
 #include "utils/list_int.h"
 
-double power(double base, int exp)
-{
-    double result = 1.0;
-    int neg = exp < 0;
-    if (neg) exp = -exp;
-
-    while (exp > 0)
-    {
-        if (exp % 2 == 1)
-            result *= base;
-        base *= base;
-        exp /= 2;
-    }
-    return neg ? 1.0 / result : result;
-}
-
 Path* Graph_tspFromHeuristic(Graph* self, int station)
 {
     assert(self && "self must not be NULL");

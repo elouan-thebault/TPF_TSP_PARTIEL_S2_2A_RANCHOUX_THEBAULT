@@ -31,5 +31,5 @@
 #define ROOT_PATH "../../.."
 #define DATA_PATH ROOT_PATH"/data"
 #define TEST_PATH ROOT_PATH"/test"
-#define GEOJSON_PATH DATA_PATH "/out/result.geojson"
+#define GEOJSON_PATH DATA_PATH "/result.geojson"
 #define TESTTEST_PATH TEST_PATH "/3_tsp_heuristic/input1.txt"

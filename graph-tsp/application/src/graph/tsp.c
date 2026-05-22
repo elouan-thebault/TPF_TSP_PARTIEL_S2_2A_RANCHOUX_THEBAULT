@@ -112,6 +112,7 @@ Path* Graph_acoConstructPath(
     int n = distances->vertexCount;
 
     bool* explored = calloc(n, sizeof(bool));
+    assert(explored);
     int current = station;
 
     explored[current] = true;

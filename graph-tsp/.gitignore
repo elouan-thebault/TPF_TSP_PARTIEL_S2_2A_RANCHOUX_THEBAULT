@@ -10,3 +10,6 @@ data/france_graph.txt
 data/france_inter.txt
 data/pays_de_la_loire_graph.txt
 data/pays_de_la_loire_inter.txt
+data/poi.csv
+data/communes-departement-region.csv
+result.geojson

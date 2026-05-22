@@ -79,7 +79,7 @@ int loadCommunes(Localisation** localisations, int* count)
         return -1;
     }
 
-    int capacity = 100;
+    int capacity = 20000;
     int ignored = 0;
 
     *count = 0;
@@ -99,9 +99,9 @@ int loadCommunes(Localisation** localisations, int* count)
         char lonStr[64] = "";
         int regionId = 0;
 
-        char* fields[15];
+        char* fields[16];
 
-        int nbFields = splitCSV(line, fields, 15);
+        int nbFields = splitCSV(line, fields, 16);
 
         if (nbFields < 15)
             continue;

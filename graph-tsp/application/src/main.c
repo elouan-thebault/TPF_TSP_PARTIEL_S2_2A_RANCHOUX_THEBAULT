@@ -3,6 +3,7 @@
 #include "graph/shortest_path.h"
 #include "utils/geojson.h"
 #include "graph/tsp.h"
+#include "graph/opt.h"
 #include "float.h"
 #include "utils/search_trough.h"
 #include "utils/list_int.h"

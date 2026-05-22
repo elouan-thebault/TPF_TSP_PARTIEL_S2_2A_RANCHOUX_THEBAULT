@@ -21,6 +21,8 @@ target_sources(${NAME} PRIVATE
     "src/graph/shortest_path.h"
     "src/graph/tsp.c"
     "src/graph/tsp.h"
+    "src/graph/opt.c"
+    "src/graph/opt.h"
 
     "src/utils/list_int.c"
     "src/utils/list_int.h"

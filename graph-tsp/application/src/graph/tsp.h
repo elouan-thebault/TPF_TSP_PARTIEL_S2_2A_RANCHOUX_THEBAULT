@@ -61,3 +61,5 @@ void Graph_acoPheromoneUpdatePath(Graph* pheromones, Path* path, float q);
 /// @param pheromones le graphe des phéromones.
 /// @param rho le coefficient d'évaporation des phéromones (entre 0.f et 1.f).
 void Graph_acoPheromoneGlobalUpdate(Graph* pheromones, float rho);
+
+

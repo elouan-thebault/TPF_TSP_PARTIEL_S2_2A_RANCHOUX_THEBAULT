@@ -2,6 +2,7 @@
 out/
 _out/
 build/
+_build_linux/
 
 .vs
 

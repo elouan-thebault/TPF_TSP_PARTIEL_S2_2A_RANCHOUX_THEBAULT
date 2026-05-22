@@ -1,7 +1,7 @@
 #include "settings.h"
 #include "graph/tsp.h"
 #include "graph/shortest_path.h"
-#include "utils/geo_json.h"
+#include "utils/geojson.h"
 #include "graph/tsp.h"
 #include "float.h"
 #include "utils/search_trough.h"
@@ -29,11 +29,105 @@ bool Arc_isInPath(Path* path, int u, int v)
 //../../../data/reduit_opti.txt
 //../../../data/france_graph.txt
 //../../../data/france_inter.txt
+int villvill_aco()
+{
+    char chgraph[255], chcoord[255];
+    int start = 0, end = 0;
+
+    FILE* f = fopen(CONFIG, "r");
+    if (!f) return EXIT_FAILURE;
+    if (fscanf(f, "%255s %255s", chgraph, chcoord) != 2) return EXIT_FAILURE;
+    if (fscanf(f, "%d %d", &start, &end) != 2) return EXIT_FAILURE;
+    fclose(f);
+
+    CoordGraph* coord_graph = CoordGraph_load(chcoord);
+    Graph* graph = Graph_load(chgraph);
+
+    Localisation* communes = NULL;
+    int nbCommunes = 0;
+    if (loadCommunes(&communes, &nbCommunes) != 0)
+    {
+        printf("Erreur lors du chargement\n");
+        return 1;
+    }
+    communes->size = nbCommunes;
+    printf("%d communes chargees\n", nbCommunes);
+
+    end = indice_from_id(end, communes);
+    start = indice_from_id(start, communes);
+    assert(start != -1 && "start invalide");
+    assert(end != -1 && "end invalide");
+
+    int n = 2;
+    int* points = calloc(n, sizeof(int));
+    if (!points) return EXIT_FAILURE;
+
+    points[0] = point_le_plus_proche(coord_graph, communes[start].coordid->coords);
+    points[1] = point_le_plus_proche(coord_graph, communes[end].coordid->coords);
+
+    int totalVertices = Graph_getVertexCount(graph);
+    int* predecessors = malloc(totalVertices * sizeof(int));
+    float* distances = malloc(totalVertices * sizeof(float));
+    assert(predecessors && distances);
+
+    Graph* reduced = Graph_create(n);
+
+    for (int i = 0; i < n; i++)
+    {
+        Graph_dijkstra(graph, points[i], -1, predecessors, distances);
+        for (int j = 0; j < n; j++)
+        {
+            if (i == j) continue;
+            if (distances[points[j]] == INFINITY)
+            {
+                printf("Pas de chemin entre les deux villes\n");
+                free(predecessors); free(distances);
+                free(points);
+                Graph_destroy(reduced); Graph_destroy(graph);
+                CoordGraph_destroy(coord_graph);
+                return EXIT_FAILURE;
+            }
+            Graph_setArc(reduced, i, j, distances[points[j]]);
+        }
+    }
+    free(predecessors);
+    free(distances);
+
+    Path* path = Graph_tspFromACO(reduced, 0, 200, 60, 2.0f, 3.0f, 0.1f, 2.0f);
+
+    if (!path)
+    {
+        printf("Erreur ACO\n");
+        free(points);
+        Graph_destroy(reduced); Graph_destroy(graph);
+        CoordGraph_destroy(coord_graph);
+        return EXIT_FAILURE;
+    }
+
+    float distance = path->distance;
+
+    create_geojson(n, points, coord_graph);
+    add_path_geojson(path, n, points, coord_graph);
+
+    printf("Distance totale: %.2f m\n", distance);
+    printf("Distance totale: %.2f km\n", distance / 1000.0f);
+
+    Path_destroy(path);
+    free(points);
+    Graph_destroy(reduced);
+    Graph_destroy(graph);
+    CoordGraph_destroy(coord_graph);
+
+    return EXIT_SUCCESS;
+}
+
 int main()
 {
     villvill();
 
 }
+
+
 
 int villvill()
 {
@@ -82,6 +176,8 @@ int villvill()
     points[0] = point_le_plus_proche(coord_graph, communes[start].coordid->coords);
     points[1] = point_le_plus_proche(coord_graph, communes[end].coordid->coords);
 
+
+
     Path* path = Graph_shortestPath(distances, points[0], points[1]);
     float distance = path->distance;
 
@@ -91,6 +187,7 @@ int villvill()
     printf("Distance totale: %.2f m\n", distance);
     distance = distance / 1000.0;
     printf("Distance totale: %.2f km\n", distance);
+    close_geojson();
 
     free(points);
     Graph_destroy(distances);

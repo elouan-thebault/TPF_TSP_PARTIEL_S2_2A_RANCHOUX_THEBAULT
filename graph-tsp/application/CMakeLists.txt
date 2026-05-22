@@ -28,8 +28,10 @@ target_sources(${NAME} PRIVATE
     "src/utils/tools.h"
     "src/utils/heap_int.c"
     "src/utils/heap_int.h"
- "src/utils/geo_json.c" "src/utils/geo_json.h" 
- "src/utils/search_trough.c" "src/utils/search_trough.h")
+     "src/utils/geojson.c" 
+     "src/utils/geojson.h" 
+     "src/utils/search_trough.c" 
+     "src/utils/search_trough.h")
 
 find_library(MATH_LIBRARY m)
 if(MATH_LIBRARY)
